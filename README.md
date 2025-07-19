@@ -1,8 +1,12 @@
 # DefenSys: Integrated Cybersecurity Platform
 
-**DefenSys** is a comprehensive cyber defense platform that combines intelligent malware detection with dynamic network attack simulation capabilities. Built with a containerized Docker architecture, it provides enterprise-grade cybersecurity tools through an accessible, cost-effective platform suitable for organizations of all scales.
+**DefenSys** is a comprehensive cybersecurity platform that analyzes Ethernet packets at the data link layer to detect anomalies based on thresholds including packet size, IP address patterns, and traffic volume, enabling rapid threat identification across network infrastructure. The system implements network-wide blacklisting of anomalous source IPs with persistent protection per node, effectively simulated across a 3-node Docker network that demonstrates real-world deployment scenarios and scalability.
 
-## 🔥 Key Features
+The platform features a live monitoring dashboard developed using React and NodeJS that provides security administrators with real-time capabilities for visualizing blacklisted MAC addresses and network threat patterns. This integrated approach combines low-level packet analysis with high-level threat visualization, delivering both immediate threat response and strategic security insights.
+
+Built with a robust tech stack including Docker, Python, Flask, NodeJS, MongoDB, and React, DefenSys leverages containerization for consistent deployment, Python and Flask for backend processing and API development, NodeJS for real-time dashboard communications, MongoDB for scalable data persistence, and React for responsive user interface components. This technology combination ensures enterprise-grade performance while maintaining the flexibility needed for diverse network environments and security requirements.
+
+## Key Features
 
 - **Containerized Attack Simulation**: Isolated Docker environments for safe DDoS testing
 - **AI-Powered Malware Detection**: Deep learning models (ResNet/CNN) achieving >95% accuracy across 25+ malware families
@@ -12,7 +16,7 @@
 - **Enterprise Scalability**: Minimal deployment overhead with high reliability
 
 
-## 🐳 Docker Architecture
+## Docker Architecture
 
 ### Container-Based Network Simulation
 
@@ -51,7 +55,7 @@ The platform includes a dedicated **lightweight Debian-based Docker container** 
 ```
 
 
-## 🚀 Quick Start with Docker
+## Quick Start with Docker
 
 ### Prerequisites
 
