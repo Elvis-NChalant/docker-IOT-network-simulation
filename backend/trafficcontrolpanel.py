@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import subprocess
 import threading
+import time
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 container_id = None
-active_attacks = {}
+active_attacks = {}  # node -> Popen process
 
 # === Utility Functions ===
 def ensure_container():
@@ -27,58 +30,95 @@ def setup_container():
     global container_id
     try:
         run_container_command = [
-            "docker", "run", "--rm", "-dit", "--network", "docker_my_network", "debian", "bash"
+            "docker", "run", "--rm", "-dit", "--network", "hackathon_my_network", "debian", "bash"
         ]
         container_id = subprocess.check_output(run_container_command, text=True).strip()
 
         subprocess.run(["docker", "exec", container_id, "apt-get", "update"], check=True)
-        subprocess.run(["docker", "exec", container_id, "apt-get", "install", "-y", "hping3", "procps", "sudo"], check=True)
+        subprocess.run(["docker", "exec", container_id, "apt-get", "install", "-y", "apache2-utils", "procps", "sudo"], check=True)
 
-        return jsonify({"status": "success", "message": "Container setup complete and hping3 installed."})
+        return jsonify({"status": "success", "message": "Container setup complete and ab installed."})
     except subprocess.CalledProcessError as e:
         return jsonify({"status": "error", "message": f"Setup failed: {e.stderr}"}), 500
 
-@app.route("/run-hping3", methods=["POST"])
-def run_hping3():
+@app.route("/run-ab", methods=["POST"])
+def run_ab():
     global container_id, active_attacks
     try:
         ensure_container()
-        node = request.json.get("node")
-        validate_node(node)
+        data = request.json
+        print("Payload received:", data)
 
-        # Run hping3 in background using threading
-        def inject_traffic(node_ip):
-            hping3_command = [
-                "docker", "exec", container_id, "hping3", "-S", "-p", "80", "-i", "u10", node_ip
+        nodes = data.get("nodes")
+        if not nodes or not isinstance(nodes, list):
+            raise Exception("No valid nodes provided.")
+
+        requests = int(data.get("requests", 100000))
+        concurrency = int(data.get("concurrency", 100))
+        duration_raw = data.get("duration")
+        duration = int(duration_raw) if duration_raw else 0
+
+        port_map = {
+            "node1": 5001,
+            "node2": 5002,
+            "node3": 5003
+        }
+
+        def launch_ab(node_name, port, req, concur, duration=None):
+            ab_command = [
+                "docker", "exec", container_id,
+                "ab", "-n", str(req), "-c", str(concur), f"http://{node_name}:{port}/"
             ]
-            active_attacks[node_ip] = subprocess.Popen(hping3_command)
+            if duration:
+                proc = subprocess.Popen(ab_command)
+                active_attacks[node_name] = proc
+                proc.wait(timeout=duration)
+            else:
+                proc = subprocess.Popen(ab_command)
+                active_attacks[node_name] = proc
+                proc.wait()
 
-        threading.Thread(target=inject_traffic, args=(node,)).start()
-        return jsonify({"status": "success", "message": f"Injecting traffic on {node}."})
+            if node_name in active_attacks:
+                del active_attacks[node_name]
+
+        for node in nodes:
+            if node not in port_map:
+                continue
+            port = port_map[node]
+
+            if node in active_attacks and active_attacks[node].poll() is None:
+                continue  # Already running
+
+            thread = threading.Thread(target=launch_ab, args=(node, port, requests, concurrency, duration))
+            thread.start()
+
+        return jsonify({"status": "success", "message": f"Started Apache Benchmark on {', '.join(nodes)}."})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route("/stop-hping3", methods=["POST"])
-def stop_hping3():
-    global container_id, active_attacks
+@app.route("/stop-ab", methods=["POST"])
+def stop_ab():
+    global active_attacks
     try:
+        data = request.json
+        nodes = data.get("nodes")
+        if not nodes or not isinstance(nodes, list):
+            raise Exception("No valid nodes provided.")
+
         ensure_container()
-        node = request.json.get("node")
-        validate_node(node)
 
-        # Use pkill to stop any matching hping3 process
-        pkill_command = [
-            "docker", "exec", container_id, "pkill", "-f", f"hping3.*{node}"
-        ]
-        subprocess.run(pkill_command, check=True)
-        
-        # Clean up our local tracking (optional)
-        if node in active_attacks:
-            active_attacks.pop(node)
+        stopped = []
+        for node in nodes:
+            # Kill all 'ab' processes inside the container
+            subprocess.run(["docker", "exec", container_id, "pkill", "-f", "ab"], check=False)
+            if node in active_attacks:
+                active_attacks.pop(node)
+                stopped.append(node)
 
-        return jsonify({"status": "success", "message": f"hping3 attack stopped on {node}."})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"status": "error", "message": f"Failed to stop: {e.stderr}"}), 500
+        if stopped:
+            return jsonify({"status": "success", "message": f"Stopped AB on: {', '.join(stopped)}."})
+        else:
+            return jsonify({"status": "warning", "message": "No active AB processes to stop."})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
@@ -90,4 +130,4 @@ def status():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run("0.0.0.0", port=6050, debug=True)

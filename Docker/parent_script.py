@@ -23,10 +23,10 @@ def get_docker_stats(container_name):
         print(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
-    container_name = "docker-node1-1"
+    container_name = "hackathon-node1-1"
     
     while True:
-        get_docker_stats("docker-node1-1")
-        get_docker_stats("docker-node2-1")
-        get_docker_stats("docker-node3-1")
+        get_docker_stats("hackathon-node1-1")
+        get_docker_stats("hackathon-node2-1")
+        get_docker_stats("hackathon-node3-1")
         time.sleep(5)  # Adjust the interval as needed

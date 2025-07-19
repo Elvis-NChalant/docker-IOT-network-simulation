@@ -3,103 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="DEFENsys Control Panel for managing network load testing"/>
   <title>DEFENsys: Traffic Control Panel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root {
-      --primary: #8b5cf6;
-      --primary-hover: #7c3aed;
-      --bg: #13111c;
-      --panel: #1a1825;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
+      --primary: #0078d4; /* Microsoft blue */
+      --primary-hover: #005ba1;
+      --accent: #d83b01; /* Microsoft orange for contrast */
+      --bg: #f3f3f3; /* Light gray background */
+      --panel: #ffffff;
+      --text: #1f1f1f;
+      --muted: #606060;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --border: #e0e0e0;
+    }
+
+    [data-theme="dark"] {
+      --bg: #1f1f1f;
+      --panel: #2d2d2d;
+      --text: #ffffff;
+      --muted: #a0a0a0;
+      --border: #3a3a3a;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg);
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(to bottom, var(--bg), #e5e5e5);
       color: var(--text);
-      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 1rem;
+      transition: background 0.3s ease;
     }
 
     .container {
-      background-color: var(--panel);
-      padding: 2.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-      width: 92%;
-      max-width: 540px;
+      background: var(--panel);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 600px;
       text-align: center;
+      border: 1px solid var(--border);
       transition: all 0.3s ease;
     }
 
     h1 {
-      font-size: 1.9rem;
-      margin-bottom: 2rem;
+      font-size: 1.75rem;
       font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
 
     .buttons {
       display: grid;
       gap: 1rem;
+      margin-top: 1.5rem;
     }
 
     button {
-      background-color: var(--primary);
-      color: white;
+      background: var(--primary);
+      color: #ffffff;
       border: none;
-      padding: 0.75rem 1.2rem;
-      font-size: 0.95rem;
-      font-weight: 500;
-      border-radius: 10px;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      transition: all 0.25s ease-in-out;
+      transition: all 0.2s ease;
+      text-decoration: none;
     }
 
-    button:hover {
-      background-color: var(--primary-hover);
+    button:hover:not(:disabled) {
+      background: var(--primary-hover);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 120, 212, 0.3);
+    }
+
+    button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.3);
+    }
+
+    button:disabled {
+      background: #a0a0a0;
+      cursor: not-allowed;
+    }
+
+    .stop-button {
+      background: var(--accent);
+    }
+
+    .stop-button:hover:not(:disabled) {
+      background: #b32d00;
+      box-shadow: 0 4px 16px rgba(216, 59, 1, 0.3);
     }
 
     .status-message {
-      margin-top: 1.8rem;
-      font-size: 0.9rem;
+      margin-top: 1.5rem;
+      font-size: 0.875rem;
       color: var(--muted);
-      transition: all 0.2s ease;
+      min-height: 1.5rem;
     }
 
     .toast {
       position: fixed;
-      bottom: 1.2rem;
+      bottom: 1.5rem;
       right: 1.5rem;
-      background-color: var(--panel);
+      background: var(--panel);
       color: var(--text);
-      padding: 1rem 1.4rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
       border-left: 4px solid var(--primary);
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-      font-size: 0.85rem;
-      animation: fadein 0.3s ease, fadeout 0.3s 2.7s ease;
+      box-shadow: var(--shadow);
+      font-size: 0.875rem;
+      animation: slideIn 0.3s ease, slideOut 0.3s 2.7s ease forwards;
+      z-index: 1000;
     }
 
-    @keyframes fadein {
+    @keyframes slideIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px);
       }
       to {
         opacity: 1;
@@ -107,60 +150,211 @@
       }
     }
 
-    @keyframes fadeout {
+    @keyframes slideOut {
       to {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(20px);
+      }
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .theme-toggle i {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem;
+        max-width: 100%;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      button {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Accessibility */
+    button:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* High Contrast Mode */
+    @media (prefers-contrast: high) {
+      :root {
+        --primary: #005a9e;
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --text: #000000;
+        --muted: #333333;
+        --border: #000000;
+      }
+
+      [data-theme="dark"] {
+        --bg: #000000;
+        --panel: #000000;
+        --text: #ffffff;
+        --muted: #cccccc;
+        --border: #ffffff;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1><i data-lucide="shield-plus" style="width: 28px; vertical-align: middle;"></i> DEFENsys Control Panel</h1>
+  <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()">
+    <i data-lucide="moon"></i>
+  </button>
+  <div class="container" role="main">
+    <h1>
+      <i data-lucide="shield-plus" style="width: 24px; height: 24px;"></i>
+      DEFENsys Control Panel
+    </h1>
 
+    <!-- Setup Container -->
+    <button onclick="sendRequest('/setup-container')" aria-label="Setup container and install Apache Benchmark">
+      <i data-lucide="package-plus"></i> Setup Container & Install ab
+    </button>
+
+    <!-- Attack Nodes -->
     <div class="buttons">
-      <button onclick="sendRequest('/setup-container')"><i data-lucide="package-plus"></i> Setup Container & Install hping3</button>
-      <button onclick="sendRequest('/run-hping3', 'docker-node1-1')"><i data-lucide="activity"></i> Inject Traffic on Node 1</button>
-      <button onclick="sendRequest('/run-hping3', 'docker-node2-1')"><i data-lucide="activity"></i> Inject Traffic on Node 2</button>
-      <button onclick="sendRequest('/run-hping3', 'docker-node3-1')"><i data-lucide="activity"></i> Inject Traffic on Node 3</button>
-      <button onclick="sendRequest('/stop-hping3', 'docker-node1-1')"><i data-lucide="x-octagon"></i> Stop Injection on Node 1</button>
-      <button onclick="sendRequest('/stop-hping3', 'docker-node2-1')"><i data-lucide="x-octagon"></i> Stop Injection on Node 2</button>
-      <button onclick="sendRequest('/stop-hping3', 'docker-node3-1')"><i data-lucide="x-octagon"></i> Stop Injection on Node 3</button>
+      <button onclick="runAB(['node1'])" aria-label="Start load testing on Node 1">
+        <i data-lucide="activity"></i> Start Load on Node 1
+      </button>
+      <button onclick="runAB(['node2'])" aria-label="Start load testing on Node 2">
+        <i data-lucide="activity"></i> Start Load on Node 2
+      </button>
+      <button onclick="runAB(['node3'])" aria-label="Start load testing on Node 3">
+        <i data-lucide="activity"></i> Start Load on Node 3
+      </button>
+      <button class="stop-button" onclick="stopAB(['node1'])" aria-label="Stop load testing on Node 1">
+        <i data-lucide="x-octagon"></i> Stop Load on Node 1
+      </button>
+      <button class="stop-button" onclick="stopAB(['node2'])" aria-label="Stop load testing on Node 2">
+        <i data-lucide="x-octagon"></i> Stop Load on Node 2
+      </button>
+      <button class="stop-button" onclick="stopAB(['node3'])" aria-label="Stop load testing on Node 3">
+        <i data-lucide="x-octagon"></i> Stop Load on Node 3
+      </button>
     </div>
 
-    <div class="status-message" id="status"></div>
+    <div class="status-message" id="status" role="status" aria-live="polite"></div>
   </div>
 
   <script>
     lucide.createIcons();
 
-    async function sendRequest(endpoint, node = null) {
+    function sendRequest(endpoint, node = null) {
       const statusEl = document.getElementById("status");
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ node })
-        });
-        const data = await response.json();
+      statusEl.innerText = "Processing...";
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ node })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      })
+      .then(data => {
         statusEl.innerText = data.message;
         showToast(data.message);
-      } catch (error) {
+      })
+      .catch(() => {
         const msg = '⚠️ Error: Could not process request.';
         statusEl.innerText = msg;
         showToast(msg);
-      }
+      });
+    }
+
+    function runAB(nodes) {
+      const statusEl = document.getElementById("status");
+      statusEl.innerText = "Starting load test...";
+      fetch('/run-ab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodes, requests: 100000, concurrency: 100 })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      })
+      .then(data => {
+        statusEl.innerText = data.message;
+        showToast(data.message);
+      })
+      .catch(() => {
+        const msg = '⚠️ Failed to start load test.';
+        statusEl.innerText = msg;
+        show +showToast(msg);
+      });
+    }
+
+    function stopAB(nodes) {
+      const statusEl = document.getElementById("status");
+      statusEl.innerText = "Stopping load test...";
+      fetch('/stop-ab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodes })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+      })
+      .then(data => {
+        statusEl.innerText = data.message;
+        showToast(data.message);
+      })
+      .catch(() => {
+        const msg = '⚠️ Failed to stop load test.';
+        statusEl.innerText = msg;
+        showToast(msg);
+      });
     }
 
     function showToast(message) {
       const toast = document.createElement("div");
       toast.className = "toast";
       toast.innerText = message;
+      toast.setAttribute('role', 'alert');
       document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.remove();
-      }, 3000);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', newTheme);
+      const icon = document.querySelector('.theme-toggle i');
+      icon.setAttribute('data-lucide', newTheme === 'dark' ? 'sun' : 'moon');
+      lucide.createIcons();
+    }
+
+    // Initialize theme based on system preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.querySelector('.theme-toggle i').setAttribute('data-lucide', 'sun');
+      lucide.createIcons();
     }
   </script>
 </body>
